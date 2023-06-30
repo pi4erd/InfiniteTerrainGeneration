@@ -8,6 +8,7 @@ public class ChunkGenerator : MonoBehaviour
     [HideInInspector] public TerrainManager manager;
 
     private Chunk chunk;
+    private Vector2 offset = Vector2.zero;
 
     Mesh mesh;
 
@@ -21,16 +22,18 @@ public class ChunkGenerator : MonoBehaviour
         manager = TerrainManager.instance;
     }
 
-    public void Generate(Vector2Int pos)
+    public void Generate(Vector2Int pos, Vector2 offset)
     {
         if(chunk == null) chunk = new Chunk(pos);
 
         chunk.position = pos;
 
+        this.offset = offset;
+
         mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
 
-        GenerateMesh(pos);
+        GenerateMesh();
     }
     
     private float GenerateNoise(float noiseX, float noiseY, int octaves, float frequency, float rarity, float distortion)
@@ -39,10 +42,11 @@ public class ChunkGenerator : MonoBehaviour
 
         for(int i = 0; i < octaves; i++)
         {
-            result += Mathf.Pow(Mathf.PerlinNoise(noiseX * frequency * i + Mathf.PerlinNoise(noiseX * i, noiseY * i) * distortion,
-                noiseY * i * frequency + Mathf.PerlinNoise(noiseX * i, noiseY * i) * distortion), rarity) / (i + 1);
+            float nx = noiseX * frequency * i;
+            float nz = noiseY * frequency * i;
+            result += Mathf.Pow(Mathf.PerlinNoise(nx + Mathf.PerlinNoise(noiseX * i, noiseY * i) * distortion,
+                nz + Mathf.PerlinNoise(nx * i, nz * i) * distortion), rarity) / (i + 2);
         }
-
         return result;
     }
 
@@ -55,7 +59,7 @@ public class ChunkGenerator : MonoBehaviour
 
         foreach(NoiseFeature noiseFeature in manager.noiseFeatures)
         {
-            noise += GenerateNoise(noiseX * chunkSize.x, noiseY * chunkSize.x, noiseFeature.octaves, noiseFeature.frequency, noiseFeature.rarity, noiseFeature.distortion) 
+            noise += GenerateNoise(noiseX * chunkSize.x + offset.x, noiseY * chunkSize.x + offset.y, noiseFeature.octaves, noiseFeature.frequency, noiseFeature.rarity, noiseFeature.distortion) 
                 * noiseFeature.strength;
         }
 
@@ -64,7 +68,7 @@ public class ChunkGenerator : MonoBehaviour
         return new Vector3(i * chunkSize.x / subdivisions, height, j * chunkSize.x / subdivisions);
     }
 
-    public void GenerateMesh(Vector2Int pos)
+    public void GenerateMesh()
     {
         List<Vector3> verts = new List<Vector3>();
         List<int> tris = new List<int>();
@@ -72,11 +76,11 @@ public class ChunkGenerator : MonoBehaviour
 
         int subdivisions = manager.subdivisions;
 
-        for(int i = 0; i <= subdivisions; i++)
+        for (int i = 0; i <= subdivisions; i++)
         {
             for(int j = 0; j <= subdivisions; j++)
             {
-                verts.Add(GenerateVertex(i, j, i / (float)subdivisions + pos.x, j / (float)subdivisions + pos.y));
+                verts.Add(GenerateVertex(i, j, i / (float)subdivisions + chunk.position.x, j / (float)subdivisions + chunk.position.y));
                 uvs.Add(new Vector2(i / (float)subdivisions, j / (float)subdivisions));
             }
         }
