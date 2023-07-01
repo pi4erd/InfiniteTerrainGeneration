@@ -17,6 +17,8 @@ public class TerrainManager : MonoBehaviour
 
     public WorldGenerator worldGenerator;
 
+    public bool generateColliders = false;
+
     private void Awake()
     {
         if(instance != null)
@@ -25,5 +27,14 @@ public class TerrainManager : MonoBehaviour
                 "Consider deleting one of them to avoid overwritten data.");
         } // We do not return on purpose to ensure that noone makes two instances :imp:
         instance = this;
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.R))
+        {
+            // Reload chunks
+            worldGenerator.RegenerateWorld();
+        }
     }
 }

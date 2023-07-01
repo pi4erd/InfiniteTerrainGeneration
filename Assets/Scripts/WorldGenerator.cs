@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.Linq;
 
 public class WorldGenerator : MonoBehaviour
 {
@@ -64,16 +65,44 @@ public class WorldGenerator : MonoBehaviour
                 chunksLoadedText.text = $"Chunks loaded: {transform.childCount}";
             }
         }
+        Dictionary<Vector2Int, GameObject> chunksLoadedClone = loadedChunks.ToDictionary(e => e.Key, e => e.Value);
+        foreach (KeyValuePair<Vector2Int, GameObject> loadedChunk in chunksLoadedClone)
+        {
+            Vector2Int temp = loadedChunk.Key - new Vector2Int((int)(player.position.x / manager.chunkSize.x), (int)(player.position.z / manager.chunkSize.x));
+            if (Mathf.Max(Mathf.Abs(temp.x), Mathf.Abs(temp.y)) > manager.viewDistance)
+            {
+                loadedChunk.Value.SetActive(false);
+            }
+        }
     }
     public IEnumerator UnloadOld()
     {
         yield return null;
     }
+    public void RegenerateWorld()
+    {
+        CleanChildren(transform);
+        loadedChunks.Clear();
+        StartCoroutine(UpdateChunks());
+    }
     public void GenerateWorld()
     {
         seed = Random.Range(int.MinValue, int.MaxValue);
         Random.InitState(seed);
-        loadedChunks.Clear();
-        StartCoroutine(UpdateChunks());
+        RegenerateWorld();
+    }
+
+    public static void CleanChildren(Transform transform)
+    {
+        var temp = new GameObject[transform.childCount];
+
+        for (int i = 0; i < temp.Length; i++)
+        {
+            temp[i] = transform.GetChild(i).gameObject;
+        }
+        foreach (var child in temp)
+        {
+            DestroyImmediate(child);
+        }
     }
 }

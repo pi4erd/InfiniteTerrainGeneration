@@ -118,5 +118,10 @@ public class ChunkGenerator : MonoBehaviour
 
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
+
+        if(manager.generateColliders)
+        {
+            GetComponent<MeshCollider>().sharedMesh = mesh;
+        }
     }
 }

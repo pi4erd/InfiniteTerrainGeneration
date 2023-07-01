@@ -14,26 +14,13 @@ public class TerrainManagerEditor : Editor
 
         if(GUILayout.Button("Clear chunks"))
         {
-            CleanChildren(tg.worldGenerator.transform);
+            WorldGenerator.CleanChildren(tg.worldGenerator.transform);
         }
 
         if (GUILayout.Button("Generate"))
         {
-            CleanChildren(tg.worldGenerator.transform);
+            WorldGenerator.CleanChildren(tg.worldGenerator.transform);
             tg.worldGenerator.GenerateWorld();
-        }
-    }
-    private static void CleanChildren(Transform transform)
-    {
-        var temp = new GameObject[transform.childCount];
-
-        for(int i = 0; i < temp.Length; i++)
-        {
-            temp[i] = transform.GetChild(i).gameObject;
-        }
-        foreach(var child in temp)
-        {
-            DestroyImmediate(child);
         }
     }
 }
